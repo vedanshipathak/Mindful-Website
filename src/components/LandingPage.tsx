@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, MessageCircle, Shield, Brain, ArrowRight, X } from 'lucide-react';
+import {Heart, MessageCircle, Shield, Brain, ArrowRight, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import LoginForm from './LoginForm';
 import SignupForm from './SignupForm';

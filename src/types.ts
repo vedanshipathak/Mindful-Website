@@ -4,6 +4,7 @@ export interface User {
   email: string;
 }
 
+
 export interface Message {
   id: string;
   text: string;
@@ -13,17 +14,22 @@ export interface Message {
 
 export interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<void>;
-  signup: (name: string, email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<{ success: boolean; message: string }>;
+  signup: (name: string, email: string, password: string) => Promise<{ success: boolean; message: string }>;
   logout: () => void;
   isAuthenticated: boolean;
 }
 
 export interface MoodEntry {
   id: string;
-  date: Date;
-  mood: 'verySad' | 'sad' | 'neutral' | 'happy' | 'veryHappy';
-  notes: string;
+  mood: string;
+  note?: string;
+  date: string;
+}
+
+export interface MoodStats {
+  moodCounts: Record<string, number>; // Example: { "Happy": 5, "Sad": 2 }
+  moodTrends: { date: string; mood: string }[]; // Trend data for graphs
 }
 
 export interface SurveyQuestion {
@@ -57,12 +63,10 @@ export interface SurveyResult {
 
 export interface MoodContextType {
   moodEntries: MoodEntry[];
-  addMoodEntry: (entry: Omit<MoodEntry, 'id'>) => void;
-  getMoodStats: () => {
-    moodCounts: Record<string, number>;
-    recentTrend: 'improving' | 'declining' | 'stable';
-  };
+  moodStats: MoodStats | null;
+  addMoodEntry: (entry: Omit<MoodEntry, "id">) => Promise<void>;
 }
+
 
 export interface SurveyContextType {
   surveys: Survey[];

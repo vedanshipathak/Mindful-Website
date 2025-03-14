@@ -1,13 +1,9 @@
-import React, { createContext, useState, useContext, ReactNode } from 'react';
-import { User, AuthContextType } from '../types';
+import React, { createContext, useState, useContext, ReactNode, useEffect } from "react";
+import { User, AuthContextType } from "../types";
+import { registerUser, loginUser, getToken, saveToken, logoutUser } from "../api/auth";
 
 // Create the context with a default value
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-// Mock user data for demonstration
-const mockUsers = [
-  { id: '1', name: 'Test User', email: 'test@example.com', password: 'password123' }
-];
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -16,72 +12,54 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
 
-  const login = async (email: string, password: string) => {
-    // Simulate API call
-    return new Promise<void>((resolve, reject) => {
-      setTimeout(() => {
-        const foundUser = mockUsers.find(
-          (u) => u.email === email && u.password === password
-        );
-        
-        if (foundUser) {
-          const { password, ...userWithoutPassword } = foundUser;
-          setUser(userWithoutPassword);
-          localStorage.setItem('user', JSON.stringify(userWithoutPassword));
-          resolve();
-        } else {
-          reject(new Error('Invalid email or password'));
-        }
-      }, 1000);
-    });
-  };
+  // Fetch user data from backend if a token exists
+  useEffect(() => {
+    const token = getToken();
+    if (token) {
+      // You can call a `/me` API here to get user details using the token
+      setUser({ id: "1", name: "User", email: "test@example.com" }); // Placeholder
+    }
+  }, []);
 
   const signup = async (name: string, email: string, password: string) => {
-    // Simulate API call
-    return new Promise<void>((resolve, reject) => {
-      setTimeout(() => {
-        const userExists = mockUsers.some((u) => u.email === email);
-        
-        if (userExists) {
-          reject(new Error('User already exists'));
-        } else {
-          const newUser = {
-            id: String(mockUsers.length + 1),
-            name,
-            email,
-            password
-          };
-          
-          mockUsers.push(newUser);
-          
-          const { password: _, ...userWithoutPassword } = newUser;
-          setUser(userWithoutPassword);
-          localStorage.setItem('user', JSON.stringify(userWithoutPassword));
-          resolve();
-        }
-      }, 1000);
-    });
+    try {
+      const response = await registerUser({ name, email, password });
+      if (response.msg === "User registered successfully") {
+        return { success: true, message: "Signup successful! Please login." };
+      } else {
+        return { success: false, message: response.msg || "Signup failed" };
+      }
+    } catch (error) {
+      return { success: false, message: "Signup failed. Try again." };
+    }
+  };
+
+  const login = async (email: string, password: string) => {
+    try {
+      const response = await loginUser({ email, password });
+      if (response.token) {
+        saveToken(response.token);
+        setUser({ id: response.user.id, name: response.user.name, email: response.user.email });
+        return { success: true, message: "Login successful!" };
+      } else {
+        return { success: false, message: response.msg || "Invalid credentials" };
+      }
+    } catch (error) {
+      return { success: false, message: "Login failed. Try again." };
+    }
   };
 
   const logout = () => {
+    logoutUser();
     setUser(null);
-    localStorage.removeItem('user');
   };
-
-  // Check if user is already logged in (from localStorage)
-  React.useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-  }, []);
 
   const value = {
     user,
     login,
     signup,
     logout,
-    isAuthenticated: !!user
+    isAuthenticated: !!user,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -90,7 +68,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
