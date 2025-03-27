@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { Message } from '../types';
 
 // API URL for local backend
-const API_URL = 'https://caa1-35-240-216-153.ngrok-free.app/chat';
+const API_URL = 'https://5fc4-34-91-72-103.ngrok-free.app/chat';
 
 const ChatInterface: React.FC = () => {
   const [input, setInput] = useState('');
@@ -45,30 +45,45 @@ const ChatInterface: React.FC = () => {
 
   const handleSend = async () => {
     if (input.trim() === '') return;
-
+  
     const userMessage: Message = {
       id: Date.now().toString(),
       text: input,
       sender: 'user',
       timestamp: new Date(),
     };
-
+  
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
     setIsTyping(true);
-
+  
+    // Check if the message is a greeting (hello, hi, etc.)
+    if (['hello', 'hi', 'hey'].includes(input.toLowerCase())) {
+      const botMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: "Hello! How can I help you today?",
+        sender: 'bot',
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, botMessage]);
+      setIsTyping(false);
+      return;
+    }
+  
+    // If it's not a greeting, send the message to the backend
     const botReply = await sendMessageToAPI(input);
-
+  
     const botMessage: Message = {
       id: (Date.now() + 1).toString(),
       text: botReply,
       sender: 'bot',
       timestamp: new Date(),
     };
-
+  
     setMessages((prev) => [...prev, botMessage]);
     setIsTyping(false);
   };
+  
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
