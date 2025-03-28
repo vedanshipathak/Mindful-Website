@@ -52,8 +52,11 @@ To set up the project locally:
    ```bash
    npm run dev
    ```
-
-   The application will be running at `http://localhost:3000`.
+5. **Start the backend server:**
+    ```bash
+    cd server
+    node server.js
+    ```   
 
 ## Related Repository
 
